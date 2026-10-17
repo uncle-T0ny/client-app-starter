@@ -41,6 +41,28 @@ export const OWNER_SCOPED_TABLES: readonly OwnerScopedTable[] = [
       }))
     },
   },
+  {
+    table: "voiceSessions",
+    rows: async (ctx, ownerId) => {
+      const sessions = await ctx.db
+        .query("voiceSessions")
+        .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
+        .collect()
+
+      return sessions.map((session) => ({ id: session._id, files: [] }))
+    },
+  },
+  {
+    table: "voiceTranscripts",
+    rows: async (ctx, ownerId) => {
+      const turns = await ctx.db
+        .query("voiceTranscripts")
+        .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
+        .collect()
+
+      return turns.map((turn) => ({ id: turn._id, files: [] }))
+    },
+  },
 ]
 
 // Deletes the owner's rows in every owner-scoped table, with their files.

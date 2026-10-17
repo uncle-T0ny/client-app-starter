@@ -9,6 +9,7 @@ import {
 } from "./lib/functions"
 import { cleanProjectName, sharedProjectValidator } from "./lib/projects"
 import { newShareToken } from "./lib/shareToken"
+import { deleteProjectVoiceData } from "./lib/voiceData"
 import schema from "./schema"
 
 // The example resource: an owner's projects, each with a share link (/p/<token>) that lets a
@@ -104,6 +105,7 @@ export const remove = ownerMutation({
   handler: async (ctx, args) => {
     const { project } = await ctx.access.requireOwnedProject(args.projectId)
 
+    await deleteProjectVoiceData(ctx, project._id)
     await ctx.db.delete(project._id)
 
     return null

@@ -21,16 +21,21 @@ import type * as lib_backup from "../lib/backup.js";
 import type * as lib_feedback from "../lib/feedback.js";
 import type * as lib_feedbackEntries from "../lib/feedbackEntries.js";
 import type * as lib_functions from "../lib/functions.js";
+import type * as lib_livekitToken from "../lib/livekitToken.js";
 import type * as lib_ownerData from "../lib/ownerData.js";
 import type * as lib_owners from "../lib/owners.js";
 import type * as lib_projects from "../lib/projects.js";
 import type * as lib_shareToken from "../lib/shareToken.js";
 import type * as lib_signIn from "../lib/signIn.js";
 import type * as lib_validators from "../lib/validators.js";
+import type * as lib_voice from "../lib/voice.js";
+import type * as lib_voiceData from "../lib/voiceData.js";
+import type * as livekit from "../livekit.js";
 import type * as migrations from "../migrations.js";
 import type * as projects from "../projects.js";
 import type * as share from "../share.js";
 import type * as testing from "../testing.js";
+import type * as voice from "../voice.js";
 
 import type {
   ApiFromModules,
@@ -53,16 +58,21 @@ const fullApi: ApiFromModules<{
   "lib/feedback": typeof lib_feedback;
   "lib/feedbackEntries": typeof lib_feedbackEntries;
   "lib/functions": typeof lib_functions;
+  "lib/livekitToken": typeof lib_livekitToken;
   "lib/ownerData": typeof lib_ownerData;
   "lib/owners": typeof lib_owners;
   "lib/projects": typeof lib_projects;
   "lib/shareToken": typeof lib_shareToken;
   "lib/signIn": typeof lib_signIn;
   "lib/validators": typeof lib_validators;
+  "lib/voice": typeof lib_voice;
+  "lib/voiceData": typeof lib_voiceData;
+  livekit: typeof livekit;
   migrations: typeof migrations;
   projects: typeof projects;
   share: typeof share;
   testing: typeof testing;
+  voice: typeof voice;
 }> = anyApi as any;
 
 /**
