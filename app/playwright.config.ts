@@ -59,6 +59,9 @@ export default defineConfig({
       url: APP_URL,
       env: {
         VITE_CONVEX_URL: CONVEX_URL,
+        // The voice card renders, so e2e/voice.spec.ts can check its fallback; the local
+        // backend has no LiveKit keys, so no session can start.
+        VITE_VOICE_ENABLED: "true",
       },
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,

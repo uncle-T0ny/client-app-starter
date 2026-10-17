@@ -1,9 +1,12 @@
 import { useQuery } from "convex/react"
+import { lazy, Suspense } from "react"
 import { useParams } from "react-router-dom"
 import { RenameForm } from "./RenameForm"
 import { api } from "../../convex/_generated/api"
-import { APP_NAME } from "../app.config"
+import { APP_NAME, VOICE_ENABLED } from "../app.config"
 import { PageColumn, PageHeader, PageMessage, Text, TextTone } from "../ui"
+
+const ProjectVoice = lazy(() => import("./ProjectVoice"))
 
 // /p/:token, the share link: a guest opens one project with no account. Every call passes the
 // token, and the server checks it (lib/access.ts).
@@ -30,6 +33,11 @@ export function SharedProjectPage() {
         name={project.name}
         shareToken={shareToken}
       />
+      {VOICE_ENABLED ? (
+        <Suspense fallback={null}>
+          <ProjectVoice projectId={project._id} shareToken={shareToken} />
+        </Suspense>
+      ) : null}
     </PageColumn>
   )
 }

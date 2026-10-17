@@ -1,14 +1,17 @@
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react"
+import { lazy, Suspense } from "react"
 import { Navigate, useParams } from "react-router-dom"
 import { RenameForm } from "./RenameForm"
 import { api } from "../../convex/_generated/api"
 import type { Doc } from "../../convex/_generated/dataModel"
-import { BRAND } from "../app.config"
+import { BRAND, VOICE_ENABLED } from "../app.config"
 import { ExportButton } from "../backup/ExportButton"
 import { projectBackup } from "../backup/projectBackup"
 import { FeedbackButton } from "../feedback/FeedbackButton"
 import { ShareButton } from "../share/ShareButton"
 import { PageColumn, PageHeader, PageMessage, Text, TextLink, TextTone, Toolbar } from "../ui"
+
+const ProjectVoice = lazy(() => import("./ProjectVoice"))
 
 function OwnerProject({ project }: { project: Doc<"projects"> }) {
   return (
@@ -29,6 +32,11 @@ function OwnerProject({ project }: { project: Doc<"projects"> }) {
         The example resource. Replace this page with your app's own screen.
       </Text>
       <RenameForm key={project.name} projectId={project._id} name={project.name} />
+      {VOICE_ENABLED ? (
+        <Suspense fallback={null}>
+          <ProjectVoice projectId={project._id} />
+        </Suspense>
+      ) : null}
     </PageColumn>
   )
 }

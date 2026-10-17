@@ -20,6 +20,10 @@ function gitShortCommit(): string {
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    // The voice module's chunk (livekit-client, loaded lazily on project pages) is about 580 kB.
+    chunkSizeWarningLimit: 600,
+  },
   define: {
     __APP_VERSION__: JSON.stringify(gitShortCommit()),
   },
