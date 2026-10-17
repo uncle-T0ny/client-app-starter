@@ -1,29 +1,20 @@
 import { createProject } from "./support/app"
 import { expect, test } from "./support/fixtures"
 
-// The voice card's fallback, with no LiveKit at all: the browser refuses the microphone, so the
-// card must say so and offer the typed message, without starting a session.
-test("voice: a blocked microphone gets a clear message and a typed fallback", async ({
-  page,
-  owner,
-}) => {
+// Voice is off on the e2e backend (it has no LiveKit, Deepgram or OpenRouter keys), so the
+// project page shows no voice card and no mic, and the owner works through the typed message.
+test("voice off: no mic or voice card, and a typed message is saved", async ({ page, owner }) => {
   await createProject(page, `Voice (${owner.suffix})`)
 
-  const card = page.getByLabel("Voice assistant")
+  const card = page.getByLabel("Message", { exact: true })
 
-  await expect(card.getByRole("button", { name: "Start talking" })).toBeVisible()
-  await page.evaluate(() => {
-    navigator.mediaDevices.getUserMedia = () =>
-      Promise.reject(new DOMException("Permission denied", "NotAllowedError"))
-  })
-  await card.getByRole("button", { name: "Start talking" }).click()
+  await expect(card.getByRole("heading", { name: "Message", exact: true })).toBeVisible()
+  await expect(page.getByLabel("Voice assistant")).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Start talking" })).toHaveCount(0)
 
-  await expect(card.getByText("The microphone is blocked.")).toBeVisible()
-  await expect(card.getByRole("button", { name: "Try again" })).toBeVisible()
+  const form = card.getByRole("form", { name: "Type a message" })
 
-  const form = card.getByRole("form", { name: "Type instead" })
-
-  await form.getByLabel("Your message").fill("My microphone doesn't work today.")
+  await form.getByLabel("Your message").fill("Please call me back tomorrow.")
   await form.getByRole("button", { name: "Send" }).click()
   await expect(form.getByText("Sent. It's saved with the project.")).toBeVisible()
 })

@@ -4,8 +4,21 @@ import { ConvexError, v, type Infer } from "convex/values"
 // events the agent worker POSTs (agent/src/transcript.ts has the same shapes), and the pure
 // rules convex/livekit.ts, convex/voice.ts and convex/http.ts share.
 
-// The worker's name; agent/src/main.ts registers under the same one. The token dispatches it.
-export const VOICE_AGENT_NAME = "voice-assistant"
+// The worker's name when AGENT_NAME is unset. The token dispatches agentName(env), and the
+// worker (agent/src/config.ts) registers under the same AGENT_NAME, so two workers in one
+// LiveKit project, each with its own name, never take each other's jobs.
+export const DEFAULT_AGENT_NAME = "voice-assistant"
+
+// Voice is on only when all five are set on the deployment: the LiveKit project (the token), and
+// the agent's Deepgram (speech) and OpenRouter (its replies). Convex calls neither of the last two
+// for voice; their keys here are part of the switch, the same five npm start checks for the agent.
+export const VOICE_KEYS = [
+  "LIVEKIT_URL",
+  "LIVEKIT_API_KEY",
+  "LIVEKIT_API_SECRET",
+  "DEEPGRAM_API_KEY",
+  "OPENROUTER_API_KEY",
+] as const
 
 // Where the agent POSTs its events (convex/http.ts).
 export const AGENT_EVENTS_PATH = "/voice/agent-events"
@@ -17,7 +30,8 @@ export const DEFAULT_SESSIONS_PER_DAY = 20
 export const MAX_TURN_LENGTH = 4000
 export const MAX_TURNS = 500
 
-export const VOICE_NOT_SET_UP = "Voice isn't set up on this deployment yet."
+export const VOICE_NOT_SET_UP =
+  "Voice is off on this deployment: it needs its LiveKit, Deepgram and OpenRouter keys."
 export const VOICE_CAP_REACHED =
   "Today's voice sessions are used up. They start again at 00:00 UTC."
 
@@ -114,17 +128,33 @@ export interface LiveKitKeys {
 
 type Env = Readonly<Record<string, string | undefined>>
 
-// The deployment's LiveKit project, or a sentence for the user when it isn't set.
-export function liveKitKeys(env: Env): LiveKitKeys {
-  const url = env.LIVEKIT_URL?.trim() ?? ""
-  const apiKey = env.LIVEKIT_API_KEY?.trim() ?? ""
-  const apiSecret = env.LIVEKIT_API_SECRET?.trim() ?? ""
+function envValue(env: Env, name: string): string {
+  return env[name]?.trim() ?? ""
+}
 
-  if (url.length === 0 || apiKey.length === 0 || apiSecret.length === 0) {
+// Whether voice is on: every one of VOICE_KEYS is set. The UI asks voice.enabled.
+export function isVoiceEnabled(env: Env): boolean {
+  return VOICE_KEYS.every((name) => envValue(env, name).length > 0)
+}
+
+// The agent the token dispatches: AGENT_NAME, or the default.
+export function agentName(env: Env): string {
+  const name = envValue(env, "AGENT_NAME")
+
+  return name.length > 0 ? name : DEFAULT_AGENT_NAME
+}
+
+// The deployment's LiveKit project, or a sentence for the user when voice is off.
+export function liveKitKeys(env: Env): LiveKitKeys {
+  if (!isVoiceEnabled(env)) {
     throw new ConvexError(VOICE_NOT_SET_UP)
   }
 
-  return { url, apiKey, apiSecret }
+  return {
+    url: envValue(env, "LIVEKIT_URL"),
+    apiKey: envValue(env, "LIVEKIT_API_KEY"),
+    apiSecret: envValue(env, "LIVEKIT_API_SECRET"),
+  }
 }
 
 // VOICE_SESSIONS_PER_DAY: a whole number, 0 turns voice off; unset means the default.

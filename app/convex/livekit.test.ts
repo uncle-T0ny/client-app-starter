@@ -3,10 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { api } from "./_generated/api"
 import type { Id } from "./_generated/dataModel"
 import {
+  DEFAULT_AGENT_NAME,
   DEFAULT_SESSIONS_PER_DAY,
   usageDay,
-  VOICE_AGENT_NAME,
   VOICE_CAP_REACHED,
+  VOICE_KEYS,
   VOICE_NOT_SET_UP,
 } from "./lib/voice"
 import { newBackend, OWNER_EMAILS, signedIn, type TestBackend, type TestCaller } from "./test.setup"
@@ -46,6 +47,8 @@ beforeEach(() => {
   vi.stubEnv("LIVEKIT_URL", LIVEKIT_URL)
   vi.stubEnv("LIVEKIT_API_KEY", API_KEY)
   vi.stubEnv("LIVEKIT_API_SECRET", API_SECRET)
+  vi.stubEnv("DEEPGRAM_API_KEY", "deepgram-example")
+  vi.stubEnv("OPENROUTER_API_KEY", "openrouter-example")
 })
 
 afterEach(() => {
@@ -70,7 +73,7 @@ describe("livekit.startSession", () => {
       canPublishData: true,
     })
     expect(claims.roomConfig?.agents).toHaveLength(1)
-    expect(claims.roomConfig?.agents[0]?.agentName).toBe(VOICE_AGENT_NAME)
+    expect(claims.roomConfig?.agents[0]?.agentName).toBe(DEFAULT_AGENT_NAME)
     expect(JSON.parse(claims.roomConfig?.agents[0]?.metadata ?? "")).toEqual({
       sessionId: connection.sessionId,
     })
@@ -126,6 +129,46 @@ describe("livekit.startSession", () => {
 
     await expect(start(owner.as, projectId)).rejects.toThrow(VOICE_NOT_SET_UP)
     expect(await usage(t)).toBe(0)
+  })
+
+  it("refuses without the Deepgram key too: voice is off", async () => {
+    const { t, owner, projectId } = await fixture()
+
+    vi.stubEnv("DEEPGRAM_API_KEY", "")
+
+    expect(await t.query(api.voice.enabled, {})).toBe(false)
+    await expect(start(owner.as, projectId)).rejects.toThrow(VOICE_NOT_SET_UP)
+    expect(await usage(t)).toBe(0)
+  })
+
+  it("dispatches the worker named by AGENT_NAME", async () => {
+    const { owner, projectId } = await fixture()
+
+    vi.stubEnv("AGENT_NAME", "voice-assistant-review")
+
+    const connection = await start(owner.as, projectId)
+    const claims = await new TokenVerifier(API_KEY, API_SECRET).verify(connection.participantToken)
+
+    expect(claims.roomConfig?.agents[0]?.agentName).toBe("voice-assistant-review")
+  })
+})
+
+describe("voice.enabled", () => {
+  it("is on with the five keys, for anyone, signed in or not", async () => {
+    const { t, owner } = await fixture()
+
+    expect(await t.query(api.voice.enabled, {})).toBe(true)
+    expect(await owner.as.query(api.voice.enabled, {})).toBe(true)
+  })
+
+  it("is off when any of them is missing", async () => {
+    const { t } = await fixture()
+
+    for (const name of VOICE_KEYS) {
+      vi.stubEnv(name, "")
+      expect(await t.query(api.voice.enabled, {})).toBe(false)
+      vi.stubEnv(name, "set")
+    }
   })
 })
 

@@ -1,14 +1,28 @@
 import { v } from "convex/values"
 import { internalMutation } from "./_generated/server"
-import { projectMutation } from "./lib/functions"
-import { agentEventValidator, cleanTypedMessage, TranscriptSource, VoiceRole } from "./lib/voice"
+import { projectMutation, publicQuery } from "./lib/functions"
+import {
+  agentEventValidator,
+  cleanTypedMessage,
+  isVoiceEnabled,
+  TranscriptSource,
+  VoiceRole,
+} from "./lib/voice"
 import { recordAgentEvent } from "./lib/voiceData"
 
 // The voice module's transcript: what the agent sends (through convex/http.ts), and the message
 // a user types when voice doesn't work. convex/livekit.ts starts the sessions.
 
-// The fallback when the microphone is blocked or the agent doesn't join: the owner or a guest
-// leaves a typed message on the project instead.
+// Whether voice is on here (lib/voice.ts, VOICE_KEYS). Off, the project pages show no voice
+// card and no mic, only the typed message; livekit.startSession refuses too.
+export const enabled = publicQuery({
+  args: {},
+  returns: v.boolean(),
+  handler: () => isVoiceEnabled(process.env),
+})
+
+// The typed message: the only input when voice is off, and the fallback when the microphone is
+// blocked or the agent doesn't join. The owner or a guest leaves it on the project.
 export const saveTypedMessage = projectMutation({
   args: {
     projectId: v.id("projects"),

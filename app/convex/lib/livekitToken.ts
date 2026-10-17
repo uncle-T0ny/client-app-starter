@@ -1,5 +1,5 @@
 import { AccessToken, RoomAgentDispatch, RoomConfiguration } from "livekit-server-sdk"
-import { VOICE_AGENT_NAME, type LiveKitKeys } from "./voice"
+import type { LiveKitKeys } from "./voice"
 
 // A LiveKit access token for one participant in one room. livekit-server-sdk runs in Convex's
 // default runtime (it signs with WebCrypto through jose), so no "use node" is needed and the
@@ -14,6 +14,8 @@ export interface VoiceGrant {
   name: string
   // The agent reads it as ctx.job.metadata (agent/src/metadata.ts).
   metadata: string
+  // The worker to dispatch: agentName() in lib/voice.ts, the worker's AGENT_NAME.
+  agentName: string
 }
 
 // The token joins the room and dispatches the agent by name. The dispatch applies only when this
@@ -33,7 +35,7 @@ export async function mintVoiceToken(keys: LiveKitKeys, grant: VoiceGrant): Prom
     canPublishData: true,
   })
   token.roomConfig = new RoomConfiguration({
-    agents: [new RoomAgentDispatch({ agentName: VOICE_AGENT_NAME, metadata: grant.metadata })],
+    agents: [new RoomAgentDispatch({ agentName: grant.agentName, metadata: grant.metadata })],
   })
 
   return await token.toJwt()

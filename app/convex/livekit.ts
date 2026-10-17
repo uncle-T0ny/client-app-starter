@@ -5,6 +5,7 @@ import { projectMutation } from "./lib/functions"
 import { mintVoiceToken } from "./lib/livekitToken"
 import { newShareToken } from "./lib/shareToken"
 import {
+  agentName,
   liveKitKeys,
   sessionsPerDay,
   usageDay,
@@ -62,6 +63,7 @@ export const startSession = projectMutation({
       identity: `${actor}-${sessionId}`,
       name: actor === Actor.Owner ? "Owner" : "Guest",
       metadata: JSON.stringify({ sessionId }),
+      agentName: agentName(process.env),
     })
 
     return { serverUrl: keys.url, participantToken, roomName, sessionId }

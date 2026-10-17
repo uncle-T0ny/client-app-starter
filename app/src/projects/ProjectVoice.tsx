@@ -12,7 +12,7 @@ export interface ProjectVoiceProps {
 
 // The voice card on a project's page, for the owner or a guest with the share link: both
 // livekit.startSession and voice.saveTypedMessage are projectMutations. Loaded lazily (the
-// LiveKit client is large) and only when VOICE_ENABLED.
+// LiveKit client is large) and only when voice.enabled (ProjectAssistant.tsx).
 export default function ProjectVoice({ projectId, shareToken }: ProjectVoiceProps) {
   const startSession = useMutation(api.livekit.startSession)
   const saveTypedMessage = useMutation(api.voice.saveTypedMessage)
