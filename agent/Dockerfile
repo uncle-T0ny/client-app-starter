@@ -11,14 +11,15 @@ RUN apt-get update \
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+COPY package.json package-lock.json tsconfig.json tsconfig.build.json ./
+RUN npm ci
 
-# Node runs the TypeScript sources directly (type stripping), so there is no build step.
+# The sources to plain JavaScript in dist/ (npm run build), then only the runtime packages.
 COPY src ./src
+RUN npm run build && npm prune --omit=dev
 
 # The plugins' model files are fetched now, at build time, not on the first session.
 RUN npx livekit-agents download-files
 
 USER node
-CMD ["node", "src/main.ts", "start"]
+CMD ["node", "dist/main.js", "start"]

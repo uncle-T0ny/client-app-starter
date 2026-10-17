@@ -17,7 +17,7 @@ const ENGLISH_ONLY = [
 ]
 
 export default defineConfig([
-  globalIgnores(["node_modules"]),
+  globalIgnores(["node_modules", "dist"]),
   {
     files: ["**/*.ts"],
     extends: [js.configs.recommended, tseslint.configs.strictTypeChecked],

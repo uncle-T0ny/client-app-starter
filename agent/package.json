@@ -1,14 +1,17 @@
 {
   "name": "client-app-starter-agent",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.4.0",
   "type": "module",
   "engines": {
-    "node": ">=22.18"
+    "node": ">=22"
   },
+  "packageManager": "npm@10.9.8",
   "scripts": {
-    "dev": "node --env-file-if-exists=.env.local src/main.ts dev",
-    "start": "node src/main.ts start",
+    "dev": "node --experimental-strip-types --disable-warning=ExperimentalWarning --env-file-if-exists=.env.local src/main.ts dev",
+    "start": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/main.ts start",
+    "build": "tsc -p tsconfig.build.json",
+    "start:prod": "node dist/main.js start",
     "download-files": "livekit-agents download-files",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -19,6 +22,7 @@
   },
   "dependencies": {
     "@livekit/agents": "^1.9.3",
+    "@livekit/agents-plugin-deepgram": "^1.9.3",
     "@livekit/agents-plugin-openai": "^1.9.3",
     "@livekit/agents-plugin-silero": "^1.9.3",
     "@livekit/rtc-node": "^1.1.0",

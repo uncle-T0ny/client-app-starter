@@ -13,12 +13,14 @@ Wants=network-online.target
 Type=simple
 User=voice-agent
 Group=voice-agent
-# agent/ copied here, then `npm ci --omit=dev` and `npx livekit-agents download-files`.
+# agent/ copied here, then `npm ci && npm run build && npm prune --omit=dev` and
+# `npx livekit-agents download-files`. It runs dist/, so any Node 22 works, even one without
+# TypeScript stripping (Ubuntu's).
 WorkingDirectory=/opt/voice-agent
 # The names in agent/.env.example with their values; root-owned, mode 600.
 EnvironmentFile=/etc/voice-agent.env
 Environment=NODE_ENV=production
-ExecStart=/usr/bin/node src/main.ts start
+ExecStart=/usr/bin/node dist/main.js start
 Restart=on-failure
 RestartSec=5
 

@@ -5,18 +5,26 @@
 export const DEFAULT_OPENROUTER_MODEL = "anthropic/claude-haiku-5.5"
 export const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 export const DEFAULT_MAX_SECONDS = 300
+// The name the worker registers under when AGENT_NAME is unset. The app's token dispatches the
+// same AGENT_NAME (app/convex/lib/voice.ts), so two workers in one LiveKit project, each with
+// its own name, never take each other's jobs.
+export const DEFAULT_AGENT_NAME = "voice-assistant"
 const MAX_MAX_SECONDS = 3600
 
 const REQUIRED = [
   "LIVEKIT_URL",
   "LIVEKIT_API_KEY",
   "LIVEKIT_API_SECRET",
+  "DEEPGRAM_API_KEY",
   "OPENROUTER_API_KEY",
   "CONVEX_SITE_URL",
   "VOICE_AGENT_SECRET",
 ] as const
 
 export interface AgentConfig {
+  agentName: string
+  // Speech in (Nova-3) and out (Aura-2) through the Deepgram plugin.
+  deepgramApiKey: string
   openRouterApiKey: string
   openRouterModel: string
   // The Convex deployment's HTTP actions origin, https://<deployment-name>.convex.site.
@@ -77,8 +85,11 @@ export function readConfig(env: Env): AgentConfig {
   }
 
   const model = value(env, "OPENROUTER_MODEL")
+  const agentName = value(env, "AGENT_NAME")
 
   return {
+    agentName: agentName.length > 0 ? agentName : DEFAULT_AGENT_NAME,
+    deepgramApiKey: value(env, "DEEPGRAM_API_KEY"),
     openRouterApiKey: value(env, "OPENROUTER_API_KEY"),
     openRouterModel: model.length > 0 ? model : DEFAULT_OPENROUTER_MODEL,
     convexSiteUrl: siteUrl(value(env, "CONVEX_SITE_URL")),

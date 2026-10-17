@@ -2,7 +2,6 @@ import { fileURLToPath } from "node:url"
 import {
   cli,
   defineAgent,
-  inference,
   llm,
   log,
   ServerOptions,
@@ -10,9 +9,11 @@ import {
   type JobContext,
   type JobProcess,
 } from "@livekit/agents"
+import * as deepgram from "@livekit/agents-plugin-deepgram"
 import * as openai from "@livekit/agents-plugin-openai"
 import * as silero from "@livekit/agents-plugin-silero"
 import { OPENROUTER_BASE_URL, readConfig } from "./config.ts"
+import { quietTranscripts } from "./logging.ts"
 import { parseJobMetadata } from "./metadata.ts"
 import { withThinkingOff } from "./openRouterBody.ts"
 import {
@@ -29,33 +30,32 @@ import {
   type TranscriptPoster,
 } from "./transcript.ts"
 
-// The voice worker. It registers with LiveKit under AGENT_NAME and joins only the rooms the app
-// dispatches it to: the token app/convex/livekit.ts mints names it. In the room it listens,
-// answers through the LLM, speaks, and POSTs the transcript to the app's Convex HTTP action.
+// The voice worker. It registers with LiveKit under AGENT_NAME (config.ts) and joins only the
+// rooms the app dispatches it to: the token app/convex/livekit.ts mints names the same
+// AGENT_NAME. In the room it listens, answers through the LLM, speaks, and POSTs the transcript
+// to the app's Convex HTTP action.
 
-// Must match VOICE_AGENT_NAME in app/convex/lib/voice.ts.
-const AGENT_NAME = "voice-assistant"
 const MAX_DURATION_REASON = "max_duration"
 // A SIGTERM lets the live sessions finish: each one ends at the session limit anyway.
 const DRAIN_MARGIN_MS = 60_000
+// The worker's health and status server listens on this machine only: nothing outside needs it.
+const HEALTH_HOST = "127.0.0.1"
 
 // Read at start: a missing variable stops the worker before it registers.
 const config = readConfig(process.env)
 
-// Speech in and out through LiveKit Inference: billed by LiveKit on the same key, no other
-// account. KEYTERMS (prompts.ts) bias the STT towards your domain's words; empty, it sends none.
-// To use a provider's own plugin instead (README, "Optional: voice (LiveKit)"):
-//   npm install @livekit/agents-plugin-deepgram    stt: new deepgram.STT({ model: "nova-3" })
-//   npm install @livekit/agents-plugin-elevenlabs  tts: new elevenlabs.TTS({ voiceId: "<id>" })
-// They read DEEPGRAM_API_KEY and ELEVEN_API_KEY.
+// Speech in and out through Deepgram's own plugin, on DEEPGRAM_API_KEY: Nova-3 listens and
+// Aura-2 (Thalia) speaks. There is no LiveKit Inference fallback. KEYTERMS (prompts.ts) bias
+// the STT towards your domain's words; empty, it sends none.
 function speech() {
   return {
-    stt: new inference.STT({
-      model: "deepgram/nova-3",
+    stt: new deepgram.STT({
+      apiKey: config.deepgramApiKey,
+      model: "nova-3",
       language: "en",
-      modelOptions: KEYTERMS.length > 0 ? { keyterm: [...KEYTERMS] } : undefined,
+      keyterm: [...KEYTERMS],
     }),
-    tts: new inference.TTS({ model: "deepgram/aura-2", voice: "athena" }),
+    tts: new deepgram.TTS({ apiKey: config.deepgramApiKey, model: "aura-2-thalia-en" }),
   }
 }
 
@@ -112,6 +112,8 @@ export default defineAgent({
     proc.userData.vad = await silero.VAD.load()
   },
   entry: async (ctx: JobContext) => {
+    quietTranscripts(log())
+
     const roomName = ctx.job.room?.name ?? ""
     const { sessionId } = parseJobMetadata(ctx.job.metadata)
     const logger = log().child({ roomName, sessionId })
@@ -182,7 +184,8 @@ export default defineAgent({
 cli.runApp(
   new ServerOptions({
     agent: fileURLToPath(import.meta.url),
-    agentName: AGENT_NAME,
+    agentName: config.agentName,
+    host: HEALTH_HOST,
     drainTimeout: config.maxSessionMs + DRAIN_MARGIN_MS,
   }),
 )
