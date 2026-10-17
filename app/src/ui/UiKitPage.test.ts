@@ -19,7 +19,7 @@ describe("UiKitPage", () => {
 
     expect(markup).toContain("--amber-soft")
     expect(markup).toContain("ui-callout--warning")
-    expect(markup).toContain("Cormorant Garamond 600")
+    expect(markup).toContain("System sans 600")
     expect(markup).toContain("ui-shortcut-list")
     expect(markup).toContain('type="search"')
     expect(markup).toContain("No projects match")

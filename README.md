@@ -20,7 +20,7 @@ Extracted 2026-10-17 from a client app built 2026-10-16, cleaned in review.
 | Access layer: `ownerQuery`, `ownerMutation`, `projectQuery`, `projectMutation`; the share-token pattern (`/p/<token>`, revocable)                            | `convex/lib/functions.ts`, `convex/lib/access.ts`, `convex/share.ts`, `src/share/`                                                      |
 | Migrations: `@convex-dev/migrations`, with one example migration                                                                                             | `convex/migrations.ts`                                                                                                                  |
 | Validators as the single source of the data shapes; the test-functions guard and owner cleanup over a configured table list                                  | `convex/lib/validators.ts`, `convex/testing.ts`, `convex/lib/ownerData.ts`                                                              |
-| UI kit: tokens, components, the `/ui-kit` page, the `ui-kit` agent skill                                                                                     | `src/ui/`, `.claude/skills/ui-kit/SKILL.md`                                                                                             |
+| UI kit: neutral tokens (slate, a blue accent, system fonts; light and dark), components, the `/ui-kit` page, the `ui-kit` agent skill                        | `src/ui/`, `.claude/skills/ui-kit/SKILL.md`                                                                                             |
 | In-app feedback: a dialog with a pasted screenshot and the page's context, a `/feedback` inbox, a triage script                                              | `convex/feedback.ts`, `src/feedback/`, `scripts/feedback.ts`                                                                            |
 | Export and import of one record as a versioned JSON file, behind an adapter; a whole-database backup script                                                  | `convex/lib/backup.ts`, `convex/backup.ts`, `src/backup/`, `scripts/backup.ts`                                                          |
 | Wrangler SPA deploy                                                                                                                                          | `wrangler.jsonc`, `npm run deploy`                                                                                                      |
@@ -191,3 +191,7 @@ Delete `agent/`, `app/src/voice/`, `app/src/projects/ProjectVoice.tsx`, `app/con
 - [docs/architecture.md](docs/architecture.md): stack, data, access rules, code map, conventions.
 - [docs/deploy-checklist.md](docs/deploy-checklist.md): Convex prod plus Workers, steps, gates and plan limits.
 - [CLAUDE.md](CLAUDE.md): the code rules for agents.
+
+## License
+
+MIT, see [LICENSE](LICENSE).

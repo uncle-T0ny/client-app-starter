@@ -29,17 +29,17 @@ interface FontSample {
 }
 
 const FONT_SAMPLES: Record<string, FontSample> = {
-  "Cormorant Garamond 600 · display: names, page titles": {
+  "System sans 600 · display: names, page titles": {
     family: "--font-display",
     weights: [600],
     sample: "Spring launch",
   },
-  "Onest 400 / 500 / 600 · UI and labels": {
+  "System sans 400 / 500 / 600 · UI and labels": {
     family: "--font-body",
     weights: [400, 500, 600],
     sample: "Spring launch · 8 tasks",
   },
-  "JetBrains Mono 400 / 500 · tabular data only": {
+  "System mono 400 / 500 · tabular data only": {
     family: "--font-mono",
     weights: [400, 500],
     sample: "1440 × 900 · 8 → 7",
@@ -96,7 +96,7 @@ export function TokensSection() {
           ))}
         </div>
       </Specimen>
-      <Specimen label="Font families (Google Fonts in index.html, fallback stacks in tokens.css)">
+      <Specimen label="Font families (system stacks in tokens.css)">
         {Object.entries(FONT_SAMPLES).map(([description, font]) => (
           <div key={font.family} className="kit-type-row">
             <span className="kit-swatch-text">

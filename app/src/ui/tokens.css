@@ -1,30 +1,34 @@
 :root {
-  --paper: #f2f5f4;
+  --paper: #f1f5f9;
   --surface: #ffffff;
-  --panel: #f7f9f8;
-  --canvas: #ecf1ef;
-  --ink: #1c2629;
-  --ink-2: #3f4d51;
-  --muted: #62716f;
-  --line: #d2dbd9;
-  --grid: #e1e8e6;
-  --accent: #2c6a5c;
+  --panel: #f8fafc;
+  --canvas: #e8edf3;
+  --ink: #0f172a;
+  --ink-2: #334155;
+  --muted: #5b6779;
+  --line: #d4dbe5;
+  --grid: #e2e8f0;
+  --accent: #2158d6;
   --accent-ink: #ffffff;
-  --accent-soft: #dcece7;
-  --amber: #9a6100;
-  --amber-ink: #6a4300;
-  --amber-soft: #fbefd3;
-  --danger: #a33b2b;
-  --danger-soft: #f8e4e0;
+  --accent-soft: #e3ecfd;
+  --amber: #a15c07;
+  --amber-ink: #6b3d05;
+  --amber-soft: #fdf1d6;
+  --danger: #b42318;
+  --danger-soft: #fde6e3;
 
   --focus-ring-color: var(--accent);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
   --shadow-overlay: 0 8px 24px color-mix(in srgb, var(--ink) 16%, transparent);
 
-  --font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
-  --font-body: "Onest", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  /* System fonts: nothing to load, and each platform's own UI face. To use a web font, put its
+     family first here and load it in index.html. */
+  --font-display:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-body:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
   --text-2xs: 0.68rem;
   --text-xs: 0.75rem;
@@ -32,11 +36,11 @@
   --text-md: 0.875rem;
   --text-lg: 1rem;
   --text-xl: 1.25rem;
-  --text-display: 2.6rem;
+  --text-display: 2rem;
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-bold: 600;
-  --leading-tight: 1.05;
+  --leading-tight: 1.15;
   --leading-normal: 1.5;
   --tracking-caps: 0.1em;
 
@@ -70,44 +74,44 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #0f1618;
-    --surface: #162023;
-    --panel: #131c1f;
-    --canvas: #1a2629;
-    --ink: #e3ebe9;
-    --ink-2: #c1cdca;
-    --muted: #92a3a0;
-    --line: #2c3b3e;
-    --grid: #213033;
-    --accent: #7bc1ad;
-    --accent-ink: #0d1a17;
-    --accent-soft: #1c3530;
-    --amber: #e8b24d;
-    --amber-ink: #f5d58f;
-    --amber-soft: #3a2c10;
-    --danger: #f08a78;
-    --danger-soft: #3a1d18;
+    --paper: #0b1120;
+    --surface: #141c2c;
+    --panel: #101827;
+    --canvas: #192235;
+    --ink: #e5e9f0;
+    --ink-2: #c3cad6;
+    --muted: #949eb0;
+    --line: #2a3446;
+    --grid: #1f293a;
+    --accent: #6ea2f7;
+    --accent-ink: #0b1120;
+    --accent-soft: #18284a;
+    --amber: #f0b54a;
+    --amber-ink: #f8d690;
+    --amber-soft: #3a2b10;
+    --danger: #f4897b;
+    --danger-soft: #3d1c19;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --paper: #0f1618;
-  --surface: #162023;
-  --panel: #131c1f;
-  --canvas: #1a2629;
-  --ink: #e3ebe9;
-  --ink-2: #c1cdca;
-  --muted: #92a3a0;
-  --line: #2c3b3e;
-  --grid: #213033;
-  --accent: #7bc1ad;
-  --accent-ink: #0d1a17;
-  --accent-soft: #1c3530;
-  --amber: #e8b24d;
-  --amber-ink: #f5d58f;
-  --amber-soft: #3a2c10;
-  --danger: #f08a78;
-  --danger-soft: #3a1d18;
+  --paper: #0b1120;
+  --surface: #141c2c;
+  --panel: #101827;
+  --canvas: #192235;
+  --ink: #e5e9f0;
+  --ink-2: #c3cad6;
+  --muted: #949eb0;
+  --line: #2a3446;
+  --grid: #1f293a;
+  --accent: #6ea2f7;
+  --accent-ink: #0b1120;
+  --accent-soft: #18284a;
+  --amber: #f0b54a;
+  --amber-ink: #f8d690;
+  --amber-soft: #3a2b10;
+  --danger: #f4897b;
+  --danger-soft: #3d1c19;
   color-scheme: dark;
 }
