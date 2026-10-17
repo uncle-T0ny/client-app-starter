@@ -1,6 +1,6 @@
 # Architecture
 
-A skeleton: fill each section in for the app you build. The text below describes the starter as shipped (v0.1.0) and its one example resource, `projects`.
+A skeleton: fill each section in for the app you build. The text below describes the starter as shipped (v0.2.0) and its one example resource, `projects`.
 
 ## Stack
 
@@ -20,6 +20,7 @@ A skeleton: fill each section in for the app you build. The text below describes
 - `projects` {ownerId, name, shareToken}: the example resource. Indexes `by_owner`, `by_shareToken`.
 - `feedback` {ownerId, type: "broken" | "feature" | "question", message, screenshotId?, context: {path, projectId?, appVersion, userAgent, viewport, time, timeZone}, createdAt, status: "new" | "done"}. Not per project: every owner sees every entry. A screenshot is a PNG or JPEG in Convex storage, at most 3 MB and 2400 px on its longest side; the browser shrinks a bigger one before it uploads.
 - The Convex Auth tables (`authTables`).
+- The optional voice module's `voiceSessions`, `voiceTranscripts` and `voiceUsage` (below, [Optional: voice](#optional-voice-livekit)).
 
 Every shape comes from `convex/lib/validators.ts` (and `convex/lib/feedback.ts`): the schema, the functions' args and `returns`, and the types `src` uses (`Infer<>`). Every table that holds an owner's data is listed in `convex/lib/ownerData.ts`.
 
@@ -30,7 +31,7 @@ Every public Convex function is declared with a builder from `convex/lib/functio
 - `ownerQuery` / `ownerMutation`: a signed-in owner, or "Not allowed". They add `ctx.ownerId` and `ctx.access`.
 - `projectQuery` / `projectMutation`: the owner or a guest. They take the optional `shareToken` arg and add `ctx.access`, whose `find*` methods return null and `require*` methods throw "Not allowed"; `*OwnedProject` refuses a guest. With a token the caller is that project's guest and nobody else, even when an owner is signed in.
 - `publicQuery`: `accounts.status` (before sign-in) and `projects.getByShareToken` (the project without its `ownerId`).
-- Internal functions (`internalQuery`, `internalMutation`): `feedback.listForTriage` for `npm run feedback`, and `convex/testing.ts`, which throws unless the deployment sets `ALLOW_TEST_FUNCTIONS=true`.
+- Internal functions (`internalQuery`, `internalMutation`): `feedback.listForTriage` for `npm run feedback`, `voice.recordEvent` for the voice agent's HTTP route, and `convex/testing.ts`, which throws unless the deployment sets `ALLOW_TEST_FUNCTIONS=true`.
 
 An owner is a signed-in user whose email is on `OWNER_EMAILS`, checked on every call (`findOwner`): taking an email off the list locks that account out at once, while the share links to its projects keep working.
 
@@ -64,10 +65,36 @@ A resource that belongs to a project gets its own `find*`/`require*` pair in `Ac
 - `convex/backup.ts`, `convex/lib/backup.ts`: the export envelope and the example's export and import.
 - `convex/testing.ts`, `convex/lib/ownerData.ts`: test owners and their cleanup.
 - `src/App.tsx`: the routes (`/`, `/project/:id`, `/p/:token`, `/feedback`, `/ui-kit`) inside an error boundary.
-- `src/projects/`, `src/share/`, `src/backup/`, `src/feedback/`, `src/auth/`: the features, on the kit.
+- `src/projects/`, `src/share/`, `src/backup/`, `src/feedback/`, `src/auth/`, `src/voice/`: the features, on the kit.
 - `src/ui/`: the UI kit; `/ui-kit` shows every component in its states and needs a signed-in owner.
 - `src/lib/`: generic helpers that import only `lib/` and `ui/` (lint-enforced).
 - `e2e/`: the specs and `e2e/support/` (ports, the local deployment guard, owners, fixtures, page helpers).
+
+## Optional: voice (LiveKit)
+
+Off unless the build sets `VITE_VOICE_ENABLED=true` (`VOICE_ENABLED` in `src/app.config.ts`); setup, costs and removal are in the [README](../README.md#optional-voice-livekit). Nothing in it is about one app: the example agent is a short assistant.
+
+```text
+browser (src/voice/VoiceSession)                Convex                           agent/ (Node worker)
+  Start: getUserMedia ok?  ── no ──> fallback: typed message ──> voice.saveTypedMessage
+     │ yes
+     └─ livekit.startSession ─────────────> cap +1 (voiceUsage), voiceSessions row,
+                                            token: room voice-<random>, dispatch "voice-assistant"
+  Room.connect(token) ── LiveKit Cloud creates the room and dispatches the agent ──> joins
+  agent not in the room after 30 s ──> fallback                    STT → LLM → TTS in the room
+                                         POST /voice/agent-events <── each turn {index}, then
+                                         (Bearer VOICE_AGENT_SECRET)     the end with the history
+                                         voiceTranscripts upserted;      limit: goodbye, deleteRoom
+                                         the end replaces them
+```
+
+- **Token** (`convex/livekit.ts`, `convex/lib/livekitToken.ts`): a `projectMutation`, so the owner or a share-token holder; identity `owner-<sessionId>` or `guest-<sessionId>`, a 10-minute TTL, grants to join that one room, publish, subscribe and send data, and a `RoomConfiguration` that dispatches the agent with `{sessionId}` as metadata. A token's dispatch applies only when its join creates the room, hence a new room name per session and no `createRoom` call. `livekit-server-sdk` runs in the default runtime (jose on WebCrypto), so there is no `"use node"` file, and the cap, the row and the mint are one transaction.
+- **Cap**: `voiceUsage` {day, sessions}, one row per UTC day, checked and incremented before the mint; `VOICE_SESSIONS_PER_DAY` (default 20, `0` is off). Missing LiveKit keys refuse with "Voice isn't set up on this deployment yet." before anything is counted.
+- **Ingest** (`convex/http.ts`, `convex/lib/voiceData.ts`): the bearer secret is compared in constant time (both sides hashed with SHA-256 first); an unset `VOICE_AGENT_SECRET` lets nobody in. The body is checked against `agentEventValidator`; 401, 400, 404 (unknown room) or 204. A turn is upserted by (session, index), so a retried POST stores nothing twice, and ignored once the session ended; the end event deletes the session's voice turns, inserts its history and sets `endedAt`, so sending it twice gives the same rows. Convex never retries an HTTP action; the agent retries network errors and 5xx (three tries, backoff), not 4xx.
+- **Data**: `voiceSessions` {ownerId, projectId, roomName, startedAt, endedAt?, endReason?} (`by_owner`, `by_project`, `by_roomName`); `voiceTranscripts` {ownerId, projectId, sessionId?, index?, role: "user" | "assistant", text, at, source: "voice" | "typed"} (`by_owner`, `by_project`, `by_session`); a typed message has no session. Both carry the project's `ownerId` and are in `convex/lib/ownerData.ts`; `projects.remove` deletes a project's voice rows with it. Shapes in `convex/lib/voice.ts`; the agent's copy of the event shapes is `agent/src/transcript.ts`.
+- **Browser** (`src/voice/`, `src/projects/ProjectVoice.tsx`, lazy-loaded): its own `Room` in `RoomContext`, `useVoiceAssistant` for the agent's state, `useTranscriptions` for the live transcript, `RoomAudioRenderer`, `useAudioPlayback` for blocked autoplay. Not components-react's `useSession`: it fetches a token on mount (`prepareConnection`), which would spend the cap on every page view.
+- **Agent** (`agent/`, its own package: TypeScript run by Node's type stripping, so erasable syntax only; Prettier and the app's lint rules without React): `ServerOptions({ agentName })` for explicit dispatch; Silero VAD, LiveKit Inference `deepgram/nova-3` and `deepgram/aura-2`; the OpenAI plugin pointed at OpenRouter, with `reasoning: { enabled: false }` added to every request body and `max_completion_tokens`; turn handling set explicitly; `record: false`; the session limit (`VOICE_MAX_SECONDS`) says a closing line, deletes the room and shuts the job down; `deleteRoomOnClose` removes the room whenever the session closes; the shutdown callback sends the history; `drainTimeout` lets a SIGTERM wait for live sessions. Its config is checked at start (`agent/src/config.ts`).
+- **Tests**: `convex/livekit.test.ts` (access, the cap, the decoded and verified grants), `convex/voice.test.ts` (secret, validation, idempotent turns, the end, the typed fallback, the cascade), `src/voice/voiceStatus.test.ts`, `agent/src/*.test.ts`, and `e2e/voice.spec.ts` (a blocked microphone shows the message and the typed fallback). Nothing in the suites reaches LiveKit or OpenRouter.
 
 ## Conventions
 

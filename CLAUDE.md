@@ -1,6 +1,6 @@
 # Client app starter: rules for agents
 
-The app lives in `app/`; run every command from there. Architecture: [docs/architecture.md](docs/architecture.md). Deploy: [docs/deploy-checklist.md](docs/deploy-checklist.md).
+The app lives in `app/`; run every command from there. The optional voice agent is its own package in `agent/` (`npm run check` there). Architecture: [docs/architecture.md](docs/architecture.md). Deploy: [docs/deploy-checklist.md](docs/deploy-checklist.md).
 
 ## Code rules
 
