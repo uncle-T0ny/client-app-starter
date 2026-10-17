@@ -33,6 +33,7 @@ import type * as lib_voiceData from "../lib/voiceData.js";
 import type * as livekit from "../livekit.js";
 import type * as migrations from "../migrations.js";
 import type * as projects from "../projects.js";
+import type * as seed from "../seed.js";
 import type * as share from "../share.js";
 import type * as testing from "../testing.js";
 import type * as voice from "../voice.js";
@@ -70,6 +71,7 @@ const fullApi: ApiFromModules<{
   livekit: typeof livekit;
   migrations: typeof migrations;
   projects: typeof projects;
+  seed: typeof seed;
   share: typeof share;
   testing: typeof testing;
   voice: typeof voice;
